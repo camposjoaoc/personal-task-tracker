@@ -8,6 +8,8 @@ function TaskList() {
     const [todoTaskList, setTodoTaskList] = useState<TaskItem[]>([]);
     const [doneTaskList, setDoneTaskList] = useState<TaskItem[]>([]);
     const [isRemoval, setRemoval] = useState<boolean>(false)
+    const [editingIndex, setEditingIndex] = useState<number | null>(null);
+    const [editedTaskText, setEditedTaskText] = useState<string>("");
 
     // Load tasks from localStorage when the component mounts
     useEffect(() => {
@@ -70,6 +72,23 @@ function TaskList() {
         setRemoval(true);
     };
 
+    // Edit a task
+    const startEditing = (index: number, text: string) => {
+        setEditingIndex(index);
+        setEditedTaskText(text);
+    };
+
+    const handleEditChange = (e: ChangeEvent<HTMLInputElement>) => {
+        setEditedTaskText(e.target.value);
+    };
+
+    const saveEditedTask = (index: number) => {
+        const updatedTasks = [...todoTaskList];
+        updatedTasks[index] = { text: editedTaskText };
+        setTodoTaskList(updatedTasks);
+        setEditingIndex(null);
+    };
+
     return (
         <main className="min-h-screen bg-gray-100 flex flex-col items-center py-10 w-400">
             <h1 className="text-2xl font-bold mb-6">Personal Task Manager</h1>
@@ -102,24 +121,40 @@ function TaskList() {
                         <ul className="space-y-2">
                             {todoTaskList.map((todo: TaskItem, index: number) => (
                                 <li key={index} className="flex justify-between items-center p-2 border-b">
-                                    <span className="w-full text-justify">{todo.text}</span>
+                                    {editingIndex === index ? (
+                                        <input
+                                            type="text"
+                                            value={editedTaskText}
+                                            onChange={handleEditChange}
+                                            className="flex-1 p-2 border rounded-lg"
+                                        />
+                                    ) : (
+                                        <span className="w-full text-justify">{todo.text}</span>
+                                    )}
                                     <div className="flex m-1 p-1 w-30 space-x-2">
-                                        <button
-                                            // onClick={() => moveToDoneTask(index)}
-                                            aria-label={`Move task ${todo.text} to Done`}
-                                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
-                                            <FontAwesomeIcon icon={faPen} />
-                                        </button>
+                                        {editingIndex === index ? (
+                                            <button
+                                                onClick={() => saveEditedTask(index)}
+                                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center">
+                                                <FontAwesomeIcon icon={faCheck} />
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => startEditing(index, todo.text)}
+                                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                                                <FontAwesomeIcon icon={faPen} />
+                                            </button>
+                                        )}
                                         <button
                                             onClick={() => removeTask(index)}
-                                            aria-label={`Remove task ${todo.text}`}
-                                            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center">
+                                            disabled={editingIndex === index}
+                                            className={`px-4 py-2 rounded-lg flex items-center ${editingIndex === index ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700 text-white'}`}>
                                             <FontAwesomeIcon icon={faTrash} />
                                         </button>
                                         <button
                                             onClick={() => moveToDoneTask(index)}
-                                            aria-label={`Move task ${todo.text} to Done`}
-                                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center">
+                                            disabled={editingIndex === index}
+                                            className={`px-4 py-2 rounded-lg flex items-center ${editingIndex === index ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white'}`}>
                                             <FontAwesomeIcon icon={faCheck} />
                                         </button>
                                     </div>
